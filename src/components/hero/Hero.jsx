@@ -54,7 +54,7 @@ const Hero = () => {
           <motion.div variants={textVariants} className="buttons">
             <motion.button variants={textVariants}>
               <a
-                href=".public/Searan_Resume_2024.pdf"
+                href="./Searan_Resume_2024.pdf"
                 download="Searan_Kuganesan_Resume.pdf"
               >
                 Resume
