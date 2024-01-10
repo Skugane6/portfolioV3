@@ -7,7 +7,7 @@ const items = [
     id: 1,
     title: "Pet Recommendation App",
     img: "./pet.png",
-    desc: "The pet recommendation app is built using React.js for the frontend and Express.js for the backend, seamlessly connecting with the Petfinder API. This integration empowers users to effortlessly explore and discover adoptable pets, complete with detailed information and images. To enhance the adoption experience, the app utilizes a sophisticated algorithm. It dynamically analyzes user responses to a set of questions, enabling personalized and well-matched pet recommendations. Users can also offer feedback on their experience with the application, fostering continuous improvement.",
+    desc: "The pet recommendation app, developed with React.js (frontend) and Express.js (backend), connects seamlessly with the Petfinder API. It empowers users to explore adoptable pets using a sophisticated algorithm that analyzes their responses to personalized questions. Users can provide feedback for continuous improvement.",
     url: "https://www.youtube.com/watch?v=0Tip-LDCYig&t=87s"
   },
   {
