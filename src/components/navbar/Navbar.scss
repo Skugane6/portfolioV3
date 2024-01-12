@@ -16,6 +16,12 @@
             padding: 20px;
           }
 
+        @include laptop {
+            padding: 0 90px;
+          }
+
+        
+
         span{
         font-weight: bold;
 
