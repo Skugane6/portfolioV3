@@ -54,7 +54,7 @@ const Hero = () => {
           <motion.div variants={textVariants} className="buttons">
             <motion.button variants={textVariants}>
               <a
-                href="./Searan_Resume_2024.pdf"
+                href="./Searan_Resume.pdf"
                 download="Searan_Kuganesan_Resume.pdf"
               >
                 Resume
@@ -93,7 +93,5 @@ const Hero = () => {
     </div>
   );
 };
-
-
 
 export default Hero;
