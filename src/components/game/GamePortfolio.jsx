@@ -12,7 +12,7 @@ const GamePortfolio = () => {
     {
       id: 1,
       title: "Talking Objects",
-      img: "./TO0.png",
+      img: "./TO_fitted.png",
       desc: "An interactive application that brings everyday objects to life through AI-powered conversations. Users can engage with various objects, each with unique personalities and knowledge, creating an immersive and educational experience.",
       url: "https://talkobj.vercel.app/",
       tech: ["React", "AI", "Node.js"]
@@ -20,7 +20,7 @@ const GamePortfolio = () => {
     {
       id: 2,
       title: "Portfolio Risk Dashboard",
-      img: "./PR1.png",
+      img: "./PR1_fitted.png",
       desc: "A comprehensive portfolio risk management dashboard that provides real-time analytics and visualizations for investment portfolios. Features advanced risk metrics, performance tracking, and interactive charts to help investors make informed decisions.",
       url: "https://github.com/Skugane6/Portfolio-Risk-Dashboard",
       tech: ["React", "D3.js", "Finance APIs"]
@@ -28,7 +28,7 @@ const GamePortfolio = () => {
     {
       id: 3,
       title: "Pet Recommendation App",
-      img: "./pet.png",
+      img: "./pet_fitted.png",
       desc: "The pet recommendation app, developed with React.js (frontend) and Express.js (backend), connects seamlessly with the Petfinder API. It empowers users to explore adoptable pets using a sophisticated algorithm that analyzes their responses to personalized questions. Users can provide feedback for continuous improvement.",
       url: "https://www.youtube.com/watch?v=0Tip-LDCYig&t=87s",
       tech: ["React", "Express.js", "Petfinder API"]
@@ -44,7 +44,7 @@ const GamePortfolio = () => {
     {
       id: 5,
       title: "iFinance Application",
-      img: "./ifinance.png",
+      img: "./ifinance_fitted.png",
       desc: "I designed and partially developed a flexible Personal Finance Management System featuring user authentication and creation. The system is crafted using Java, SQL, and JavaFX. It incorporates the core principles of double-entry bookkeeping, enabling users to oversee assets, liabilities, income, expenses, and ensuring precise tracking of financial transactions within the platform.",
       url: "https://github.com/Skugane6/iFinance",
       tech: ["Java", "SQL", "JavaFX"]
@@ -52,7 +52,7 @@ const GamePortfolio = () => {
     {
       id: 6,
       title: "Avatar Game",
-      img: "./avatargame.png",
+      img: "./avatargame_fitted.png",
       desc: "Become the Avatar in this thrilling game! Fight elemental monsters across 4 levels, collecting coins after each victory. Upgrade stats at the shop. Face off against Prince Zuko in an epic boss battle!",
       url: "https://github.com/Skugane6/avatar-game",
       tech: ["Python", "Pygame"]
@@ -60,346 +60,285 @@ const GamePortfolio = () => {
   ];
 
   useEffect(() => {
-    class GameScene extends Phaser.Scene {
+    class GalleryScene extends Phaser.Scene {
       constructor() {
-        super({ key: 'GameScene' });
-        this.player = null;
-        this.cursors = null;
-        this.platforms = null;
-        this.questionBlocks = [];
-        this.velocity = 200;
-        this.jumpVelocity = -600;
+        super({ key: 'GalleryScene' });
+        this.paintings = [];
+        this.ropes = [];
+        this.windows = [];
       }
 
       preload() {
-        // Load stick figure sprites
-        const spriteBasePath = './Stick Figure Character Sprites 2D/Fighter sprites/';
-
-        // Load idle frames
-        for (let i = 1; i <= 8; i++) {
-          const frameNum = String(i).padStart(4, '0');
-          this.load.image(`idle_${i}`, `${spriteBasePath}fighter_Idle_${frameNum}.png`);
-        }
-
-        // Load walk frames
-        for (let i = 9; i <= 16; i++) {
-          const frameNum = String(i).padStart(4, '0');
-          this.load.image(`walk_${i}`, `${spriteBasePath}fighter_walk_${frameNum}.png`);
-        }
-
-        // Load run frames
-        for (let i = 17; i <= 24; i++) {
-          const frameNum = String(i).padStart(4, '0');
-          this.load.image(`run_${i}`, `${spriteBasePath}fighter_run_${frameNum}.png`);
-        }
-
-        // Load jump frames
-        for (let i = 43; i <= 47; i++) {
-          const frameNum = String(i).padStart(4, '0');
-          this.load.image(`jump_${i}`, `${spriteBasePath}fighter_jump_${frameNum}.png`);
-        }
-
-        // Load lucky block image
-        this.load.image('luckyBlock', `${spriteBasePath}luckyblock.png`);
-
-        // Load background
+        // Load images
+        console.log('Loading images...');
         this.load.image('background', './background.png');
+        this.load.image('painting', './painting.png');
+        this.load.image('rope', './rope.png');
+        this.load.image('window', './window.png');
 
-        // Create simple colored rectangles for game objects
-        this.createPlaceholderAssets();
-      }
+        this.load.on('complete', () => {
+          console.log('All images loaded successfully');
+        });
 
-      createPlaceholderAssets() {
-
-        // Platform
-        const platformGraphics = this.add.graphics();
-        platformGraphics.fillStyle(0x8B4513, 1);
-        platformGraphics.fillRect(0, 0, 400, 32);
-        platformGraphics.generateTexture('platform', 400, 32);
-        platformGraphics.destroy();
-
-        // Ground
-        const groundGraphics = this.add.graphics();
-        groundGraphics.fillStyle(0x654321, 1);
-        groundGraphics.fillRect(0, 0, 800, 64);
-        groundGraphics.generateTexture('ground', 800, 64);
-        groundGraphics.destroy();
-
-        // Contact coin
-        const contactGraphics = this.add.graphics();
-        contactGraphics.fillStyle(0xFF0000, 1);
-        contactGraphics.fillCircle(32, 32, 32);
-        contactGraphics.generateTexture('contactCoin', 64, 64);
-        contactGraphics.destroy();
-
-        // About coin
-        const aboutGraphics = this.add.graphics();
-        aboutGraphics.fillStyle(0x00BFFF, 1);
-        aboutGraphics.fillCircle(32, 32, 32);
-        aboutGraphics.generateTexture('aboutCoin', 64, 64);
-        aboutGraphics.destroy();
+        this.load.on('loaderror', (file) => {
+          console.error('Error loading file:', file.key, file.url);
+        });
       }
 
       create() {
+        console.log('Create scene called');
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
+        console.log('Canvas size:', width, 'x', height);
 
-        // Set world bounds for scrolling
-        this.physics.world.setBounds(0, 0, 3000, height);
+        // Background dimensions (in pixels)
+        const bgWidth = 12288;
+        const bgHeight = 1024;
 
-        // Add background image
-        const bg = this.add.image(0, 0, 'background').setOrigin(0, 0);
+        // Background fits 8 paintings of 1536 pixels each: 8 * 1536 = 12288
+        // So each painting takes up exactly 1/8 of the background width
 
-        // Scale background to fit screen
-        const scaleX = width / 1920;
-        const scaleY = height / 1080;
-        const scale = Math.max(scaleX, scaleY); // Use max to ensure it covers the screen
-        bg.setScale(scale);
-        bg.setScrollFactor(0); // Fixed background, doesn't scroll
+        // Calculate scale factor based on screen height to fit background
+        const scaleY = height / bgHeight;
 
-        // Create animations
-        this.anims.create({
-          key: 'idle',
-          frames: [
-            { key: 'idle_1' },
-            { key: 'idle_2' },
-            { key: 'idle_3' },
-            { key: 'idle_4' },
-            { key: 'idle_5' },
-            { key: 'idle_6' },
-            { key: 'idle_7' },
-            { key: 'idle_8' }
-          ],
-          frameRate: 10,
-          repeat: -1
-        });
+        // Set world bounds - background width scaled to screen
+        const scaledBgWidth = bgWidth * scaleY;
+        this.cameras.main.setBounds(0, 0, scaledBgWidth, height);
 
-        this.anims.create({
-          key: 'walk',
-          frames: [
-            { key: 'walk_9' },
-            { key: 'walk_10' },
-            { key: 'walk_11' },
-            { key: 'walk_12' },
-            { key: 'walk_13' },
-            { key: 'walk_14' },
-            { key: 'walk_15' },
-            { key: 'walk_16' }
-          ],
-          frameRate: 12,
-          repeat: -1
-        });
+        // Add background - it should fill the height and extend horizontally
+        const background = this.add.image(0, 0, 'background').setOrigin(0, 0);
+        background.setScale(scaleY);
+        background.setScrollFactor(1);
+        console.log('Background added with scale:', scaleY, 'Width:', scaledBgWidth);
 
-        this.anims.create({
-          key: 'run',
-          frames: [
-            { key: 'run_17' },
-            { key: 'run_18' },
-            { key: 'run_19' },
-            { key: 'run_20' },
-            { key: 'run_21' },
-            { key: 'run_22' },
-            { key: 'run_23' },
-            { key: 'run_24' }
-          ],
-          frameRate: 15,
-          repeat: -1
-        });
+        // Calculate spacing - 8 paintings across the background
+        const spacing = scaledBgWidth / 8;
 
-        this.anims.create({
-          key: 'jump',
-          frames: [
-            { key: 'jump_43' },
-            { key: 'jump_44' },
-            { key: 'jump_45' },
-            { key: 'jump_46' },
-            { key: 'jump_47' }
-          ],
-          frameRate: 10,
-          repeat: 0
-        });
+        // Painting dimensions: 1536x1024 - make 50% smaller, then 20% bigger
+        const paintingScale = scaleY * 0.5 * 1.2;
+        const scaledPaintingWidth = 1536 * paintingScale;
+        const scaledPaintingHeight = 1024 * paintingScale;
 
-        // Create platforms group
-        this.platforms = this.physics.add.staticGroup();
+        // Rope dimensions: 1536x1024 - scale with adjustments (30% bigger, 50% wider)
+        const ropeScaleX = scaleY * 0.25 * 1.5; // 50% wider
+        const ropeScaleY = scaleY * 0.25 * 1.3; // 30% bigger (taller)
+        const scaledRopeHeight = 1024 * ropeScaleY;
 
-        // Ground
-        for (let i = 0; i < 4; i++) {
-          this.platforms.create(i * 800 + 400, height - 32, 'ground');
-        }
+        // Window dimensions: 500x500 - make 50% smaller, then 30% bigger
+        const windowScale = scaleY * 0.5 * 1.3;
+        const scaledWindowSize = 500 * windowScale;
 
-        // Create player with idle sprite
-        this.player = this.physics.add.sprite(100, height - 200, 'idle_1');
-        this.player.setBounce(0.1);
-        this.player.setCollideWorldBounds(true);
-        this.player.setScale(0.8); // Smaller character size
-        this.player.play('idle');
+        // Position paintings lower on the wall (moved down)
+        const paintingY = height * 0.45;
 
-        // Single platform height - just high enough for player to jump and hit
-        const platformHeight = height - 200;
-        const blockHeight = platformHeight - 100; // Blocks 100px above platform
+        // Position ropes near the bottom (moved down more)
+        const ropeY = height - (scaledRopeHeight / 2) - (height * 0.02);
 
-        // Create question blocks for each project - all at same level
-        const blockPositions = [
-          { x: 400, y: blockHeight },
-          { x: 650, y: blockHeight },
-          { x: 900, y: blockHeight },
-          { x: 1150, y: blockHeight },
-          { x: 1400, y: blockHeight },
-          { x: 1650, y: blockHeight },
-        ];
+        // Position windows at the same level as the middle of the paintings
+        const windowY = paintingY;
 
-        projects.forEach((project, index) => {
-          if (blockPositions[index]) {
-            const block = this.physics.add.sprite(
-              blockPositions[index].x,
-              blockPositions[index].y,
-              'luckyBlock'
-            );
-            block.setImmovable(true);
-            block.body.allowGravity = false;
-            block.projectData = project;
-            block.setScale(0.3); // Smaller scale for lucky blocks
-            this.questionBlocks.push(block);
+        // Create 8 paintings with overlaid information
+        for (let i = 0; i < 8; i++) {
+          const x = spacing * i + (spacing / 2);
 
-            // Add floating animation
-            this.tweens.add({
-              targets: block,
-              y: block.y - 10,
-              duration: 1000,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.easeInOut'
+          // Create painting
+          const painting = this.add.image(x, paintingY, 'painting');
+          painting.setScale(paintingScale);
+          painting.setInteractive({ useHandCursor: true });
+
+          // Determine what to display on each painting
+          let displayText = '';
+          let isAbout = false;
+          let isContact = false;
+          let projectData = null;
+
+          if (i === 0) {
+            // First painting - About
+            displayText = 'ABOUT';
+            isAbout = true;
+          } else if (i === 7) {
+            // Last painting - Contact
+            displayText = 'CONTACT';
+            isContact = true;
+          } else if (projects[i - 1]) {
+            // Middle 6 paintings - Projects
+            projectData = projects[i - 1];
+            displayText = projectData.title.toUpperCase();
+          }
+
+          // Add text overlay on painting with pixelated font
+          if (displayText) {
+            const textStyle = {
+              fontSize: `${Math.floor(scaledPaintingWidth * 0.08)}px`,
+              fill: '#ffffff',
+              fontFamily: '"Press Start 2P", cursive',
+              align: 'center',
+              wordWrap: { width: scaledPaintingWidth * 0.8 },
+              stroke: '#000000',
+              strokeThickness: 4,
+              shadow: {
+                offsetX: 3,
+                offsetY: 3,
+                color: '#000000',
+                blur: 0,
+                stroke: true,
+                fill: true
+              }
+            };
+
+            const text = this.add.text(x, paintingY + scaledPaintingHeight * 0.35, displayText, textStyle);
+            text.setOrigin(0.5);
+
+            // Add project image thumbnail if it's a project
+            if (projectData && projectData.img) {
+              // Load and display project thumbnail
+              const thumbnailKey = `project_${i}`;
+              this.load.image(thumbnailKey, projectData.img);
+              this.load.once('complete', () => {
+                const thumbnail = this.add.image(x, paintingY - scaledPaintingHeight * 0.1, thumbnailKey);
+
+                // Calculate scale to fit thumbnail within painting (max 70% of painting width/height)
+                const texture = thumbnail.texture;
+                const imgWidth = texture.getSourceImage().width;
+                const imgHeight = texture.getSourceImage().height;
+
+                const maxWidth = scaledPaintingWidth * 0.7;
+                const maxHeight = scaledPaintingHeight * 0.5;
+
+                const scaleX = maxWidth / imgWidth;
+                const scaleY = maxHeight / imgHeight;
+                const thumbnailScale = Math.min(scaleX, scaleY);
+
+                thumbnail.setScale(thumbnailScale);
+                thumbnail.setOrigin(0.5);
+              });
+              this.load.start();
+            }
+          }
+
+          // Make painting clickable
+          if (isAbout) {
+            painting.on('pointerdown', () => {
+              window.dispatchEvent(new CustomEvent('showAbout'));
+            });
+          } else if (isContact) {
+            painting.on('pointerdown', () => {
+              window.dispatchEvent(new CustomEvent('showContact'));
+            });
+          } else if (projectData) {
+            painting.on('pointerdown', () => {
+              window.dispatchEvent(new CustomEvent('showProject', {
+                detail: projectData
+              }));
             });
           }
-        });
 
-        // Create special coins - About at beginning, Contact at end
-        const aboutCoin = this.physics.add.sprite(200, blockHeight, 'aboutCoin');
-        aboutCoin.body.allowGravity = false;
-        aboutCoin.setImmovable(true);
-        aboutCoin.isAbout = true;
-        this.questionBlocks.push(aboutCoin);
+          // Add hover effect
+          painting.on('pointerover', () => {
+            painting.setScale(paintingScale * 1.05);
+            this.tweens.add({
+              targets: painting,
+              y: paintingY - 20,
+              duration: 200,
+              ease: 'Power2'
+            });
+          });
 
-        const aboutText = this.add.text(200, blockHeight, 'i', {
-          fontSize: '36px',
-          color: '#FFFFFF',
-          fontFamily: '"Press Start 2P", cursive'
-        });
-        aboutText.setOrigin(0.5);
+          painting.on('pointerout', () => {
+            painting.setScale(paintingScale);
+            this.tweens.add({
+              targets: painting,
+              y: paintingY,
+              duration: 200,
+              ease: 'Power2'
+            });
+          });
 
-        this.tweens.add({
-          targets: aboutCoin,
-          angle: 360,
-          duration: 2000,
-          repeat: -1,
-          ease: 'Linear'
-        });
+          this.paintings.push(painting);
 
-        const contactCoin = this.physics.add.sprite(1900, blockHeight, 'contactCoin');
-        contactCoin.body.allowGravity = false;
-        contactCoin.setImmovable(true);
-        contactCoin.isContact = true;
-        this.questionBlocks.push(contactCoin);
+          // Create rope under the painting
+          const rope = this.add.image(x, ropeY, 'rope');
+          rope.setScale(ropeScaleX, ropeScaleY); // Different X and Y scales
+          this.ropes.push(rope);
 
-        const contactText = this.add.text(1900, blockHeight, 'C', {
-          fontSize: '36px',
-          color: '#FFFFFF',
-          fontFamily: '"Press Start 2P", cursive'
-        });
-        contactText.setOrigin(0.5);
+          // Create window between paintings (except for the last position)
+          if (i < 7) {
+            const windowX = x + (spacing / 2);
+            const windowSprite = this.add.image(windowX, windowY, 'window');
+            windowSprite.setScale(windowScale);
+            this.windows.push(windowSprite);
+          }
+        }
 
-        this.tweens.add({
-          targets: contactCoin,
-          angle: 360,
-          duration: 2000,
-          repeat: -1,
-          ease: 'Linear'
-        });
-
-        // Physics
-        this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.overlap(this.player, this.questionBlocks, this.hitBlock, null, this);
-
-        // Camera follows player
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-        this.cameras.main.setBounds(0, 0, 3000, height);
-
-        // Input
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-        // Instructions text
-        const instructionsText = this.add.text(100, 50,
-          'Arrow Keys to Move | Space/Up to Jump | Hit blocks from below!\nAbout (i) → Projects (?) → Contact (C)',
+        // Add instruction text
+        const instructionsText = this.add.text(width / 2, 30,
+          'Click on paintings to view projects | Use Arrow Keys or Drag to Navigate',
           {
-            fontSize: '14px',
-            fill: '#000',
-            backgroundColor: '#ffffff',
-            padding: { x: 10, y: 5 },
+            fontSize: '16px',
+            fill: '#fff',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: { x: 20, y: 10 },
             align: 'center',
             fontFamily: '"Press Start 2P", cursive'
           }
         );
+        instructionsText.setOrigin(0.5);
         instructionsText.setScrollFactor(0);
-      }
+        instructionsText.setDepth(1000);
 
-      hitBlock(player, block) {
-        if (player.body.touching.up && block.body.touching.down) {
-          if (block.isContact) {
-            window.dispatchEvent(new CustomEvent('showContact'));
-          } else if (block.isAbout) {
-            window.dispatchEvent(new CustomEvent('showAbout'));
-          } else if (block.projectData) {
-            window.dispatchEvent(new CustomEvent('showProject', {
-              detail: block.projectData
-            }));
+        // Camera controls
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+        // Start camera at the left
+        this.cameras.main.scrollX = 0;
+
+        // Enable drag scrolling
+        this.input.on('pointerdown', (pointer) => {
+          this.isDragging = true;
+          this.dragStartX = pointer.x;
+          this.dragStartScrollX = this.cameras.main.scrollX;
+        });
+
+        this.input.on('pointermove', (pointer) => {
+          if (this.isDragging) {
+            const dragDistance = this.dragStartX - pointer.x;
+            this.cameras.main.scrollX = Phaser.Math.Clamp(
+              this.dragStartScrollX + dragDistance,
+              0,
+              Math.max(0, scaledBgWidth - width)
+            );
           }
+        });
 
-          // Bump animation
-          this.tweens.add({
-            targets: block,
-            y: block.y - 20,
-            duration: 100,
-            yoyo: true,
-            ease: 'Linear'
-          });
-        }
+        this.input.on('pointerup', () => {
+          this.isDragging = false;
+        });
+
+        // Touch support
+        this.input.addPointer(2);
       }
 
       update() {
-        if (!this.player) return;
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        const bgWidth = 12288;
+        const scaleY = height / 1024;
+        const scaledBgWidth = bgWidth * scaleY;
+        const scrollSpeed = 10;
 
-        const onGround = this.player.body.touching.down;
-
-        // Horizontal movement
+        // Keyboard scrolling
         if (this.cursors.left.isDown) {
-          this.player.setVelocityX(-this.velocity);
-          this.player.flipX = true;
-          if (onGround) {
-            this.player.play('run', true);
-          }
+          this.cameras.main.scrollX = Phaser.Math.Clamp(
+            this.cameras.main.scrollX - scrollSpeed,
+            0,
+            Math.max(0, scaledBgWidth - width)
+          );
         } else if (this.cursors.right.isDown) {
-          this.player.setVelocityX(this.velocity);
-          this.player.flipX = false;
-          if (onGround) {
-            this.player.play('run', true);
-          }
-        } else {
-          this.player.setVelocityX(0);
-          if (onGround) {
-            this.player.play('idle', true);
-          }
-        }
-
-        // Jump
-        if ((this.cursors.up.isDown || this.spaceKey.isDown) && onGround) {
-          this.player.setVelocityY(this.jumpVelocity);
-          this.player.play('jump', true);
-        }
-
-        // If in air and not jumping animation, show jump
-        if (!onGround && this.player.anims.currentAnim?.key !== 'jump') {
-          this.player.play('jump', true);
+          this.cameras.main.scrollX = Phaser.Math.Clamp(
+            this.cameras.main.scrollX + scrollSpeed,
+            0,
+            Math.max(0, scaledBgWidth - width)
+          );
         }
       }
     }
@@ -409,15 +348,8 @@ const GamePortfolio = () => {
       parent: gameRef.current,
       width: window.innerWidth,
       height: window.innerHeight,
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { y: 1200 },
-          debug: false
-        }
-      },
-      scene: GameScene,
-      backgroundColor: '#87CEEB'
+      scene: GalleryScene,
+      backgroundColor: '#000000'
     };
 
     const game = new Phaser.Game(config);
