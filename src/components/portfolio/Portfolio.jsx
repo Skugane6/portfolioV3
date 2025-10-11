@@ -1,9 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import "./portfolio.scss";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 
 const Portfolio = ({ onEnterMuseum }) => {
   const ref = useRef();
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -14,6 +15,21 @@ const Portfolio = ({ onEnterMuseum }) => {
     stiffness: 100,
     damping: 30,
   });
+
+  useEffect(() => {
+    // Check for saved dark mode preference
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode === 'true') {
+      setIsDarkMode(true);
+      document.body.classList.add('dark-mode');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', !isDarkMode);
+  };
 
   const items = [
   {
@@ -93,6 +109,9 @@ const Portfolio = ({ onEnterMuseum }) => {
     <div className="portfolio" ref={ref}>
       <button className="museum-button" onClick={onEnterMuseum}>
         Enter Museum
+      </button>
+      <button className="dark-mode-toggle" onClick={toggleDarkMode}>
+        {isDarkMode ? '☀️' : '🌙'}
       </button>
 
       {/* Hero Section */}
