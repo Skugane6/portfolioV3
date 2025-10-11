@@ -197,6 +197,9 @@ const Portfolio = ({ onEnterMuseum }) => {
       {/* Contact Section */}
       <section className="contact-section">
         <h2 className="section-heading">Get In Touch</h2>
+        <p className="section-subheading">
+          Let's connect! I'm always open to discussing new opportunities, projects, or collaborations.
+        </p>
         <div className="contact-grid">
           <div className="contact-card">
             <div className="contact-icon">
