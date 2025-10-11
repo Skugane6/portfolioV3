@@ -394,31 +394,51 @@
     position: sticky;
     top: 0;
     left: 0;
-    padding: 50px 0 30px 0;
+    padding: 60px 20px 40px 20px;
     text-align: center;
-    color: orange;
-    font-size: 36px;
-    background: rgba(0, 0, 0, 0.9);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     z-index: 100;
     margin-bottom: 0;
 
     @include mobile {
-      padding: 30px 0 20px 0;
-      font-size: 24px;
+      padding: 40px 20px 30px 20px;
     }
 
     @include laptop {
-      font-size: 24px;
-      padding: 30px 0 20px 0;
+      padding: 50px 20px 35px 20px;
     }
 
     h1 {
       margin: 0 0 20px 0;
+      color: white;
+      font-size: 48px;
+      font-weight: 700;
+
+      @include mobile {
+        font-size: 32px;
+      }
+
+      @include laptop {
+        font-size: 40px;
+      }
     }
 
     .progressBar {
-      height: 10px;
+      height: 6px;
       background-color: white;
+      border-radius: 3px;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  section {
+    padding: 80px 20px;
+    background: #f8f9fa;
+
+    &:nth-child(even) {
+      background: white;
     }
   }
 
@@ -427,46 +447,74 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 100%;
-    overflow: hidden;
+    min-height: 100vh;
+    padding: 40px 20px;
+
+    @include mobile {
+      min-height: auto;
+      padding: 40px 10px;
+    }
 
     .wrapper {
-      max-width: 1366px;
-      height: 100%;
+      max-width: 1200px;
+      width: 100%;
       margin: auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 50px;
+      gap: 60px;
+      background: white;
+      padding: 60px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 
       @include mobile {
         flex-direction: column;
+        gap: 30px;
+        padding: 30px 20px;
+        border-radius: 15px;
+      }
+
+      @include laptop {
+        padding: 40px;
+        gap: 40px;
       }
 
       .imageContainer {
         flex: 1;
-        height: 500px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
+        background: #f8f9fa;
+        padding: 20px;
 
         @include mobile {
           width: 100%;
-          height: 250px;
-          margin-top: 20px;
+          padding: 15px;
         }
 
         @include laptop {
-          padding-left: 20px;
-          height: 400px;
+          padding: 20px;
         }
 
         img {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          max-width: 100%;
+          max-height: 500px;
           display: block;
+          border-radius: 10px;
+
+          @include mobile {
+            max-height: 300px;
+          }
+
+          @include laptop {
+            max-height: 400px;
+          }
         }
       }
 
@@ -474,47 +522,76 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 30px;
+        gap: 25px;
 
         @include mobile {
           transform: none !important;
-          padding: 10px;
+          padding: 0;
           align-items: center;
           text-align: center;
+          gap: 20px;
         }
 
         h2 {
-          font-size: 72px;
+          font-size: 48px;
+          color: #333;
+          font-weight: 700;
+          line-height: 1.2;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
 
           @include mobile {
-            font-size: 36px;
+            font-size: 28px;
           }
 
           @include laptop {
-            font-size: 48px;
+            font-size: 38px;
           }
         }
 
         p {
-          color: gray;
-          font-size: 20px;
+          color: #666;
+          font-size: 16px;
+          line-height: 1.8;
 
           @include mobile {
-            font-size: 16px;
+            font-size: 14px;
           }
 
           @include laptop {
-            padding-right: 30px;
+            font-size: 15px;
           }
         }
 
         button {
-          background-color: orange;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
           border: none;
-          border-radius: 10px;
-          padding: 10px;
-          width: 200px;
+          border-radius: 30px;
+          padding: 15px 40px;
+          font-size: 16px;
+          font-weight: 600;
           cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+          align-self: flex-start;
+
+          @include mobile {
+            align-self: center;
+            padding: 12px 30px;
+            font-size: 14px;
+          }
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
         }
       }
     }
