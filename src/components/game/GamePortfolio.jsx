@@ -7,6 +7,34 @@ const GamePortfolio = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showContact, setShowContact] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showStartScreen, setShowStartScreen] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
+  const gameInstance = useRef(null);
+
+  // Function to re-enable painting interactions
+  const enablePaintings = () => {
+    if (gameInstance.current && gameInstance.current.scene.scenes[0]) {
+      const scene = gameInstance.current.scene.scenes[0];
+      if (scene.paintings) {
+        scene.paintings.forEach(p => p.setInteractive({ useHandCursor: true }));
+      }
+    }
+  };
+
+  // Handle start button click
+  const handleStartClick = () => {
+    setFadeOut(true);
+    setTimeout(() => {
+      setShowStartScreen(false);
+      // Enable paintings after start screen is dismissed
+      if (gameInstance.current && gameInstance.current.scene.scenes[0]) {
+        const scene = gameInstance.current.scene.scenes[0];
+        if (scene.paintings) {
+          scene.paintings.forEach(p => p.setInteractive({ useHandCursor: true }));
+        }
+      }
+    }, 800); // Match animation duration (0.8s)
+  };
 
   const projects = [
     {
@@ -36,7 +64,7 @@ const GamePortfolio = () => {
     {
       id: 4,
       title: "Eye Tracking Mouse",
-      img: "./eye.png",
+      img: "./eye_fitted.png",
       desc: "This Python program utilizes the MediaPipe, OpenCV, and PyAutoGUI libraries to track the location of the user's eyes and adjust the cursor accordingly. MediaPipe is employed for facial landmark detection, OpenCV is utilized for image processing and eye tracking, and PyAutoGUI is responsible for tracking cursor movement.",
       url: "https://github.com/Skugane6/eye-mouse",
       tech: ["Python", "MediaPipe", "OpenCV"],
@@ -66,6 +94,15 @@ const GamePortfolio = () => {
         this.paintings = [];
         this.ropes = [];
         this.windows = [];
+        this.player = null;
+        this.cursors = null;
+        this.joystick = null;
+        this.joystickBase = null;
+        this.joystickThumb = null;
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.isJumping = false;
+        this.jumpStartTime = 0;
+        this.jumpDuration = 600; // Jump lasts 600ms (quick jump)
       }
 
       preload() {
@@ -73,8 +110,32 @@ const GamePortfolio = () => {
         console.log("Loading images...");
         this.load.image("background", "./background.png");
         this.load.image("painting", "./painting.png");
+        this.load.image("aboutmepainting", "./aboutmepainting.png");
+        this.load.image("contactmepainting", "./contactmepainting.png");
         this.load.image("rope", "./rope.png");
         this.load.image("window", "./window.png");
+        this.load.image("windowOpen", "./windowOpen.png");
+
+        // Load character sprites
+        const spriteBasePath = "./Stick Figure Character Sprites 2D/Fighter sprites/";
+
+        // Load idle frames (1-8)
+        for (let i = 1; i <= 8; i++) {
+          const frameNum = String(i).padStart(4, "0");
+          this.load.image(`idle_${i}`, `${spriteBasePath}fighter_Idle_${frameNum}.png`);
+        }
+
+        // Load run frames (17-24)
+        for (let i = 17; i <= 24; i++) {
+          const frameNum = String(i).padStart(4, "0");
+          this.load.image(`run_${i}`, `${spriteBasePath}fighter_run_${frameNum}.png`);
+        }
+
+        // Load jump frames (43-47)
+        for (let i = 43; i <= 47; i++) {
+          const frameNum = String(i).padStart(4, "0");
+          this.load.image(`jump_${i}`, `${spriteBasePath}fighter_jump_${frameNum}.png`);
+        }
 
         this.load.on("complete", () => {
           console.log("All images loaded successfully");
@@ -98,39 +159,188 @@ const GamePortfolio = () => {
         // Background fits 8 paintings of 1536 pixels each: 8 * 1536 = 12288
         // So each painting takes up exactly 1/8 of the background width
 
-        // Calculate scale factor based on screen height to fit background
-        const scaleY = height / bgHeight;
+        // Calculate scale factor based on HEIGHT to fit everything vertically
+        // Width will extend horizontally and be scrollable
+        const bgScale = height / bgHeight;
 
-        // Set world bounds - background width scaled to screen
-        const scaledBgWidth = bgWidth * scaleY;
+        // Set world bounds - background width scaled to screen height
+        const scaledBgWidth = bgWidth * bgScale;
         this.cameras.main.setBounds(0, 0, scaledBgWidth, height);
 
-        // Add background - it should fill the height and extend horizontally
+        // Add background - it fills the height perfectly and extends horizontally
         const background = this.add.image(0, 0, "background").setOrigin(0, 0);
-        background.setScale(scaleY);
+        background.setScale(bgScale);
         background.setScrollFactor(1);
         console.log(
           "Background added with scale:",
-          scaleY,
+          bgScale,
           "Width:",
-          scaledBgWidth
+          scaledBgWidth,
+          "Height:",
+          height
         );
+
+        // Enable physics
+        this.physics.world.setBounds(0, 0, scaledBgWidth, height);
+
+        // Create animations
+        this.anims.create({
+          key: "idle",
+          frames: Array.from({ length: 8 }, (_, i) => ({ key: `idle_${i + 1}` })),
+          frameRate: 10,
+          repeat: -1,
+        });
+
+        this.anims.create({
+          key: "run",
+          frames: Array.from({ length: 8 }, (_, i) => ({ key: `run_${i + 17}` })),
+          frameRate: 12,
+          repeat: -1,
+        });
+
+        this.anims.create({
+          key: "jump",
+          frames: Array.from({ length: 5 }, (_, i) => ({ key: `jump_${i + 43}` })),
+          frameRate: 15,
+          repeat: 0,
+        });
+
+        // Create player character - anchored to background like everything else
+        // Position at a fixed point on the background (820px on original 1024px background = 80%)
+        const groundY = 820 * bgScale; // Same relative position on all screen sizes
+        this.player = this.physics.add.sprite(200, groundY, "idle_1");
+        this.player.setScale(bgScale * 1.5); // Scaled relative to background
+        this.player.body.setAllowGravity(false); // No gravity
+        this.player.setDepth(10);
+
+        // Store ground Y and jump height (both scaled relative to background)
+        this.groundY = groundY;
+        this.jumpHeight = 200 * bgScale; // Jump height also scales with background
+
+        // Start idle animation immediately
+        this.player.anims.play("idle", true);
+
+        // Camera follows player
+        this.cameras.main.startFollow(this.player, true, 0.1, 0);
+
+        // Create mobile joystick if on mobile
+        if (this.isMobile) {
+          const joystickSize = 80 * bgScale; // Scaled with background
+          const joystickX = joystickSize + 30 * bgScale; // Scaled padding
+          const joystickY = height - joystickSize - 30 * bgScale; // Scaled padding from bottom
+
+          // Joystick base - pixelated rectangle
+          this.joystickBase = this.add.rectangle(joystickX, joystickY, joystickSize, joystickSize, 0x888888, 0.5);
+          this.joystickBase.setScrollFactor(0);
+          this.joystickBase.setDepth(1001);
+          this.joystickBase.setStrokeStyle(2 * bgScale, 0x000000, 1); // Pixelated border
+
+          // Joystick thumb - pixelated rectangle (smaller)
+          const thumbSize = (joystickSize * 2) / 3;
+          this.joystickThumb = this.add.rectangle(joystickX, joystickY, thumbSize, thumbSize, 0xcccccc, 0.8);
+          this.joystickThumb.setScrollFactor(0);
+          this.joystickThumb.setDepth(1002);
+          this.joystickThumb.setStrokeStyle(2 * bgScale, 0x000000, 1); // Pixelated border
+          this.joystickThumb.setInteractive({ draggable: true });
+
+          // Joystick data
+          this.joystick = {
+            base: { x: joystickX, y: joystickY },
+            thumb: this.joystickThumb,
+            force: { x: 0, y: 0 },
+            radius: joystickSize / 2,
+          };
+
+          // Joystick drag events
+          this.input.on("drag", (pointer, gameObject, dragX, dragY) => {
+            if (gameObject === this.joystickThumb) {
+              const distance = Phaser.Math.Distance.Between(
+                this.joystick.base.x,
+                this.joystick.base.y,
+                pointer.x,
+                pointer.y
+              );
+
+              const angle = Phaser.Math.Angle.Between(
+                this.joystick.base.x,
+                this.joystick.base.y,
+                pointer.x,
+                pointer.y
+              );
+
+              if (distance < this.joystick.radius) {
+                this.joystickThumb.x = pointer.x;
+                this.joystickThumb.y = pointer.y;
+              } else {
+                this.joystickThumb.x = this.joystick.base.x + Math.cos(angle) * this.joystick.radius;
+                this.joystickThumb.y = this.joystick.base.y + Math.sin(angle) * this.joystick.radius;
+              }
+
+              const clampedDistance = Math.min(distance, this.joystick.radius);
+              this.joystick.force.x = (Math.cos(angle) * clampedDistance) / this.joystick.radius;
+              this.joystick.force.y = (Math.sin(angle) * clampedDistance) / this.joystick.radius;
+            }
+          });
+
+          this.input.on("dragend", (pointer, gameObject) => {
+            if (gameObject === this.joystickThumb) {
+              this.joystickThumb.x = this.joystick.base.x;
+              this.joystickThumb.y = this.joystick.base.y;
+              this.joystick.force.x = 0;
+              this.joystick.force.y = 0;
+            }
+          });
+
+          // Jump button for mobile - pixelated rectangle
+          const jumpButtonSize = 60 * bgScale; // Scaled with background
+          const jumpButton = this.add.rectangle(
+            width - jumpButtonSize - 30 * bgScale,
+            height - jumpButtonSize - 30 * bgScale,
+            jumpButtonSize,
+            jumpButtonSize,
+            0xff6666,
+            0.7
+          );
+          jumpButton.setScrollFactor(0);
+          jumpButton.setDepth(1001);
+          jumpButton.setStrokeStyle(2 * bgScale, 0x000000, 1); // Pixelated border
+          jumpButton.setInteractive();
+
+          const jumpText = this.add.text(
+            width - jumpButtonSize - 30 * bgScale,
+            height - jumpButtonSize - 30 * bgScale,
+            "JUMP",
+            { fontSize: `${14 * bgScale}px`, fill: "#fff", fontFamily: '"Press Start 2P", cursive' }
+          );
+          jumpText.setOrigin(0.5);
+          jumpText.setScrollFactor(0);
+          jumpText.setDepth(1002);
+
+          jumpButton.on("pointerdown", () => {
+            // Trigger jump if not already jumping
+            if (!this.isJumping) {
+              this.isJumping = true;
+              this.jumpStartTime = this.time.now;
+              this.player.anims.play("jump", true);
+            }
+          });
+        }
 
         // Calculate spacing - 8 paintings across the background
         const spacing = scaledBgWidth / 8;
 
         // Painting dimensions: 1536x1024 - make 50% smaller, then 20% bigger
-        const paintingScale = scaleY * 0.5 * 1.2;
+        const paintingScale = bgScale * 0.5 * 1.2;
         const scaledPaintingWidth = 1536 * paintingScale;
         const scaledPaintingHeight = 1024 * paintingScale;
 
         // Rope dimensions: 1536x1024 - scale with adjustments (30% bigger, 50% wider)
-        const ropeScaleX = scaleY * 0.25 * 1.5; // 50% wider
-        const ropeScaleY = scaleY * 0.25 * 1.3; // 30% bigger (taller)
+        const ropeScaleX = bgScale * 0.25 * 1.5; // 50% wider
+        const ropeScaleY = bgScale * 0.25 * 1.3; // 30% bigger (taller)
         const scaledRopeHeight = 1024 * ropeScaleY;
 
-        // Window dimensions: 500x500 - make 50% smaller, then 30% bigger
-        const windowScale = scaleY * 0.5 * 1.3;
+        // Window dimensions: 500x500 - make 50% of current size
+        const windowScale = bgScale * 0.5 * 1.3 * 0.5; // 50% smaller
         const scaledWindowSize = 500 * windowScale;
 
         // Position paintings lower on the wall (moved down)
@@ -146,30 +356,43 @@ const GamePortfolio = () => {
         for (let i = 0; i < 8; i++) {
           const x = spacing * i + spacing / 2;
 
-          // Create painting
-          const painting = this.add.image(x, paintingY, "painting");
-          painting.setScale(paintingScale);
-          painting.setInteractive({ useHandCursor: true });
-
           // Determine what to display on each painting
           let displayText = "";
           let isAbout = false;
           let isContact = false;
           let projectData = null;
+          let paintingTexture = "painting"; // Default texture
 
           if (i === 0) {
             // First painting - About
             displayText = "ABOUT";
             isAbout = true;
+            paintingTexture = "aboutmepainting";
           } else if (i === 7) {
             // Last painting - Contact
             displayText = "CONTACT";
             isContact = true;
+            paintingTexture = "contactmepainting";
           } else if (projects[i - 1]) {
             // Middle 6 paintings - Projects
             projectData = projects[i - 1];
             displayText = projectData.title.toUpperCase();
           }
+
+          // Create painting with appropriate texture
+          const painting = this.add.image(x, paintingY, paintingTexture);
+
+          // Apply different scaling for aboutmepainting and contactmepainting
+          // Regular paintings are 1536x1024, new paintings are 612x408
+          // Scale factor needed: 1536/612 = 2.51 for width, 1024/408 = 2.51 for height
+          if (paintingTexture === "aboutmepainting" || paintingTexture === "contactmepainting") {
+            const scaleMultiplier = 1536 / 612; // ~2.51
+            painting.setScale(paintingScale * scaleMultiplier);
+          } else {
+            painting.setScale(paintingScale);
+          }
+
+          painting.setInteractive({ useHandCursor: true });
 
           // Add text overlay on painting with pixelated font
           if (displayText) {
@@ -207,8 +430,9 @@ const GamePortfolio = () => {
               this.load.image(thumbnailKey, projectData.img);
               this.load.once("complete", () => {
                 // Apply consistent positioning for all project images
+                // Position relative to painting frame using percentages for consistent placement
                 let yOffset = paintingY - scaledPaintingHeight * 0.1;
-                yOffset += 50; // Move all project images down 50 pixels
+                yOffset += scaledPaintingHeight * 0.09; // Proportional offset
 
                 const thumbnail = this.add.image(x, yOffset, thumbnailKey);
 
@@ -224,11 +448,9 @@ const GamePortfolio = () => {
                 const scaleY = maxHeight / imgHeight;
                 let thumbnailScale = Math.min(scaleX, scaleY);
 
-                // Apply consistent sizing for all project images
-                const widthIncrease = 10 / imgWidth;
-                const heightIncrease = 8 / imgHeight;
-                const finalScaleX = thumbnailScale + widthIncrease;
-                const finalScaleY = thumbnailScale + heightIncrease;
+                // Apply consistent sizing for all project images (scale proportionally)
+                const finalScaleX = thumbnailScale * 1.015; // 1.5% wider
+                const finalScaleY = thumbnailScale * 1.012; // 1.2% taller
                 thumbnail.setScale(finalScaleX, finalScaleY);
                 thumbnail.setOrigin(0.5);
                 thumbnail.setDepth(1); // Images below text (depth 2)
@@ -243,17 +465,23 @@ const GamePortfolio = () => {
             }
           }
 
-          // Make painting clickable
+          // Make painting clickable (but disabled initially)
           if (isAbout) {
             painting.on("pointerdown", () => {
+              // Disable all painting interactions
+              this.paintings.forEach(p => p.disableInteractive());
               window.dispatchEvent(new CustomEvent("showAbout"));
             });
           } else if (isContact) {
             painting.on("pointerdown", () => {
+              // Disable all painting interactions
+              this.paintings.forEach(p => p.disableInteractive());
               window.dispatchEvent(new CustomEvent("showContact"));
             });
           } else if (projectData) {
             painting.on("pointerdown", () => {
+              // Disable all painting interactions
+              this.paintings.forEach(p => p.disableInteractive());
               window.dispatchEvent(
                 new CustomEvent("showProject", {
                   detail: projectData,
@@ -262,9 +490,18 @@ const GamePortfolio = () => {
             });
           }
 
+          // Start with paintings disabled - will be enabled after start screen
+          painting.disableInteractive();
+
+          // Store the painting's base scale for hover animations
+          const basePaintingScale = (paintingTexture === "aboutmepainting" || paintingTexture === "contactmepainting")
+            ? paintingScale * (1536 / 612)
+            : paintingScale;
+          painting.basePaintingScale = basePaintingScale;
+
           // Add hover effect
           painting.on("pointerover", () => {
-            painting.setScale(paintingScale * 1.05);
+            painting.setScale(painting.basePaintingScale * 1.05);
             this.tweens.add({
               targets: painting,
               y: paintingY - 20,
@@ -288,7 +525,7 @@ const GamePortfolio = () => {
           });
 
           painting.on("pointerout", () => {
-            painting.setScale(paintingScale);
+            painting.setScale(painting.basePaintingScale);
             this.tweens.add({
               targets: painting,
               y: paintingY,
@@ -324,20 +561,36 @@ const GamePortfolio = () => {
             const windowX = x + spacing / 2;
             const windowSprite = this.add.image(windowX, windowY, "window");
             windowSprite.setScale(windowScale);
+            windowSprite.setInteractive({ useHandCursor: true });
+
+            // Store initial state
+            windowSprite.isOpen = false;
+
+            // Toggle window on click
+            windowSprite.on("pointerdown", () => {
+              if (windowSprite.isOpen) {
+                windowSprite.setTexture("window");
+                windowSprite.isOpen = false;
+              } else {
+                windowSprite.setTexture("windowOpen");
+                windowSprite.isOpen = true;
+              }
+            });
+
             this.windows.push(windowSprite);
           }
         }
 
-        // Add instruction text
+        // Add instruction text (scaled to background like everything else)
         const instructionsText = this.add.text(
           width / 2,
-          30,
-          "Click on paintings to view projects | Use Arrow Keys or Drag to Navigate",
+          30 * bgScale, // Anchored to background scale
+          "Click on paintings to view projects | Use Arrow Keys to Navigate",
           {
-            fontSize: "16px",
+            fontSize: `${16 * bgScale}px`, // Scaled with background
             fill: "#fff",
             backgroundColor: "rgba(0, 0, 0, 0.7)",
-            padding: { x: 20, y: 10 },
+            padding: { x: 20 * bgScale, y: 10 * bgScale }, // Scaled padding
             align: "center",
             fontFamily: '"Press Start 2P", cursive',
           }
@@ -348,57 +601,88 @@ const GamePortfolio = () => {
 
         // Camera controls
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.cursors.space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Start camera at the left
         this.cameras.main.scrollX = 0;
-
-        // Enable drag scrolling
-        this.input.on("pointerdown", (pointer) => {
-          this.isDragging = true;
-          this.dragStartX = pointer.x;
-          this.dragStartScrollX = this.cameras.main.scrollX;
-        });
-
-        this.input.on("pointermove", (pointer) => {
-          if (this.isDragging) {
-            const dragDistance = this.dragStartX - pointer.x;
-            this.cameras.main.scrollX = Phaser.Math.Clamp(
-              this.dragStartScrollX + dragDistance,
-              0,
-              Math.max(0, scaledBgWidth - width)
-            );
-          }
-        });
-
-        this.input.on("pointerup", () => {
-          this.isDragging = false;
-        });
 
         // Touch support
         this.input.addPointer(2);
       }
 
       update() {
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
-        const bgWidth = 12288;
-        const scaleY = height / 1024;
-        const scaledBgWidth = bgWidth * scaleY;
-        const scrollSpeed = 10;
+        if (!this.player) return;
 
-        // Keyboard scrolling
-        if (this.cursors.left.isDown) {
-          this.cameras.main.scrollX = Phaser.Math.Clamp(
-            this.cameras.main.scrollX - scrollSpeed,
-            0,
-            Math.max(0, scaledBgWidth - width)
-          );
-        } else if (this.cursors.right.isDown) {
-          this.cameras.main.scrollX = Phaser.Math.Clamp(
-            this.cameras.main.scrollX + scrollSpeed,
-            0,
-            Math.max(0, scaledBgWidth - width)
-          );
+        const moveSpeed = 600; // Twice as fast (was 300)
+        let velocityX = 0;
+        let isMoving = false;
+
+        // Handle mobile joystick input
+        if (this.isMobile && this.joystick) {
+          velocityX = this.joystick.force.x * moveSpeed;
+          isMoving = Math.abs(this.joystick.force.x) > 0.1;
+
+          // Flip character based on movement direction
+          if (this.joystick.force.x < -0.1) {
+            this.player.setFlipX(true);
+          } else if (this.joystick.force.x > 0.1) {
+            this.player.setFlipX(false);
+          }
+        }
+        // Handle keyboard input for desktop
+        else {
+          if (this.cursors.left.isDown) {
+            velocityX = -moveSpeed;
+            isMoving = true;
+            this.player.setFlipX(true);
+          } else if (this.cursors.right.isDown) {
+            velocityX = moveSpeed;
+            isMoving = true;
+            this.player.setFlipX(false);
+          }
+
+          // Jump with spacebar or up arrow
+          if ((this.cursors.up.isDown || this.cursors.space?.isDown) && !this.isJumping) {
+            this.isJumping = true;
+            this.jumpStartTime = this.time.now;
+            this.player.anims.play("jump", true);
+          }
+        }
+
+        // Apply horizontal velocity
+        this.player.setVelocityX(velocityX);
+
+        // Handle jump arc (smooth parabolic motion)
+        if (this.isJumping) {
+          const elapsed = this.time.now - this.jumpStartTime;
+          const progress = Math.min(elapsed / this.jumpDuration, 1);
+
+          // Parabolic arc: goes up then down
+          // At progress 0 -> 0, at 0.5 -> 1 (peak), at 1 -> 0 (back to ground)
+          const jumpOffset = Math.sin(progress * Math.PI) * this.jumpHeight;
+          this.player.y = this.groundY - jumpOffset;
+
+          // End jump when duration is complete
+          if (progress >= 1) {
+            this.isJumping = false;
+            this.player.y = this.groundY;
+          }
+        } else {
+          // Keep character at fixed ground height when not jumping
+          this.player.y = this.groundY;
+        }
+
+        // Handle animations based on player state
+        if (!this.isJumping) {
+          if (isMoving) {
+            if (this.player.anims.currentAnim?.key !== "run") {
+              this.player.anims.play("run", true);
+            }
+          } else {
+            if (this.player.anims.currentAnim?.key !== "idle") {
+              this.player.anims.play("idle", true);
+            }
+          }
         }
       }
     }
@@ -410,9 +694,17 @@ const GamePortfolio = () => {
       height: window.innerHeight,
       scene: GalleryScene,
       backgroundColor: "#000000",
+      physics: {
+        default: "arcade",
+        arcade: {
+          gravity: { y: 0 },
+          debug: false,
+        },
+      },
     };
 
     const game = new Phaser.Game(config);
+    gameInstance.current = game;
 
     // Event listeners
     const handleShowProject = (e) => setSelectedProject(e.detail);
@@ -441,13 +733,26 @@ const GamePortfolio = () => {
   return (
     <div className="game-portfolio">
       <div ref={gameRef} className="game-container" />
+      {showStartScreen && (
+        <div className={`start-screen ${fadeOut ? 'fade-out' : ''}`}>
+          <div className="start-screen-content">
+            <h1 className="pixel-title">SEARAN'S<br />PORTFOLIO</h1>
+            <button className="pixel-start-button" onClick={handleStartClick}>
+              <span className="button-text">START</span>
+            </button>
+            <div className="pixel-instructions">
+              Press START to enter the museum
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedProject && (
-        <div className="modal-overlay" onClick={() => setSelectedProject(null)}>
+        <div className="modal-overlay" onClick={() => { setSelectedProject(null); enablePaintings(); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button
               className="close-btn"
-              onClick={() => setSelectedProject(null)}
+              onClick={() => { setSelectedProject(null); enablePaintings(); }}
             >
               ×
             </button>
@@ -458,6 +763,23 @@ const GamePortfolio = () => {
                 className="project-image"
               />
               <h2>{selectedProject.title}</h2>
+              {selectedProject.title === "Talking Objects" && (
+                <a
+                  href="https://talkobj.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#4a9eff",
+                    textDecoration: "underline",
+                    fontSize: "14px",
+                    marginTop: "-10px",
+                    display: "block",
+                    fontFamily: '"Press Start 2P", cursive'
+                  }}
+                >
+                  talkobj.vercel.app
+                </a>
+              )}
               <div className="tech-stack">
                 {selectedProject.tech.map((tech, idx) => (
                   <span key={idx} className="tech-badge">
@@ -480,12 +802,12 @@ const GamePortfolio = () => {
       )}
 
       {showContact && (
-        <div className="modal-overlay" onClick={() => setShowContact(false)}>
+        <div className="modal-overlay" onClick={() => { setShowContact(false); enablePaintings(); }}>
           <div
             className="modal-content contact-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="close-btn" onClick={() => setShowContact(false)}>
+            <button className="close-btn" onClick={() => { setShowContact(false); enablePaintings(); }}>
               ×
             </button>
             <div className="modal-body">
@@ -540,12 +862,12 @@ const GamePortfolio = () => {
       )}
 
       {showAbout && (
-        <div className="modal-overlay" onClick={() => setShowAbout(false)}>
+        <div className="modal-overlay" onClick={() => { setShowAbout(false); enablePaintings(); }}>
           <div
             className="modal-content about-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="close-btn" onClick={() => setShowAbout(false)}>
+            <button className="close-btn" onClick={() => { setShowAbout(false); enablePaintings(); }}>
               ×
             </button>
             <div className="modal-body">
