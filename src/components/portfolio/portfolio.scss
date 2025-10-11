@@ -117,40 +117,126 @@
   }
 
   .about-section {
-    padding: 80px 20px;
-    background: #f8f9fa;
+    padding: 100px 20px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
     text-align: center;
 
     .section-heading {
       font-size: 48px;
-      margin-bottom: 50px;
+      margin-bottom: 30px;
       color: #333;
+      font-weight: 700;
 
       @include mobile {
         font-size: 32px;
       }
     }
 
-    .qualities-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
+    .about-description {
+      max-width: 900px;
+      margin: 0 auto 60px;
+      font-size: 18px;
+      line-height: 1.8;
+      color: #555;
 
-      .quality-item {
+      @include mobile {
+        font-size: 16px;
+        margin-bottom: 40px;
+      }
+    }
+
+    .skills-container {
+      max-width: 1200px;
+      margin: 0 auto 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      text-align: left;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .skill-category {
         background: white;
-        padding: 30px 20px;
+        padding: 30px;
         border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        font-size: 18px;
-        font-weight: 600;
-        color: #667eea;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
 
         &:hover {
           transform: translateY(-5px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        h3 {
+          font-size: 20px;
+          color: #667eea;
+          margin-bottom: 20px;
+          font-weight: 600;
+          text-align: center;
+        }
+
+        .skill-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+
+          .skill-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: scale(1.05);
+              box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            }
+          }
+        }
+      }
+    }
+
+    .experience-highlights {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .highlight-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px;
+        border-radius: 15px;
+        color: white;
+        text-align: left;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        h4 {
+          font-size: 20px;
+          margin-bottom: 15px;
+          font-weight: 600;
+        }
+
+        p {
+          font-size: 14px;
+          line-height: 1.6;
+          opacity: 0.95;
+          margin: 0;
         }
       }
     }
@@ -253,19 +339,26 @@
     position: sticky;
     top: 0;
     left: 0;
-    padding-top: 50px;
+    padding: 50px 0 30px 0;
     text-align: center;
     color: orange;
     font-size: 36px;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 100;
+    margin-bottom: 0;
 
     @include mobile {
-      padding-top: calc(100vh - 100px);
+      padding: 30px 0 20px 0;
       font-size: 24px;
     }
 
     @include laptop {
       font-size: 24px;
-      padding-top: 30px;
+      padding: 30px 0 20px 0;
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
     }
 
     .progressBar {

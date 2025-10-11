@@ -121,13 +121,68 @@ const Portfolio = ({ onEnterMuseum }) => {
       {/* About Me Section */}
       <section className="about-section">
         <h2 className="section-heading">About Me</h2>
-        <div className="qualities-grid">
-          <div className="quality-item">Analytical</div>
-          <div className="quality-item">Innovative</div>
-          <div className="quality-item">Adaptable</div>
-          <div className="quality-item">Detail-oriented</div>
-          <div className="quality-item">Collaborative</div>
-          <div className="quality-item">Problem-solver</div>
+        <p className="about-description">
+          4th Year Software Engineering Student at Western University with professional experience as a Full Stack Developer & Data Analyst at Mitsubishi Heavy Industries.
+          Passionate about building innovative full-stack applications, implementing machine learning solutions, and creating impactful user experiences.
+        </p>
+
+        <div className="skills-container">
+          <div className="skill-category">
+            <h3>Languages</h3>
+            <div className="skill-tags">
+              <span className="skill-tag">Java</span>
+              <span className="skill-tag">Python</span>
+              <span className="skill-tag">JavaScript</span>
+              <span className="skill-tag">C/C++/C#</span>
+              <span className="skill-tag">SQL</span>
+              <span className="skill-tag">HTML5</span>
+              <span className="skill-tag">CSS3</span>
+            </div>
+          </div>
+
+          <div className="skill-category">
+            <h3>Frameworks & Libraries</h3>
+            <div className="skill-tags">
+              <span className="skill-tag">React</span>
+              <span className="skill-tag">Angular</span>
+              <span className="skill-tag">Flask</span>
+              <span className="skill-tag">Node.js</span>
+              <span className="skill-tag">Express.js</span>
+              <span className="skill-tag">TensorFlow.js</span>
+              <span className="skill-tag">OpenCV</span>
+              <span className="skill-tag">NumPy/Pandas</span>
+              <span className="skill-tag">scikit-learn</span>
+            </div>
+          </div>
+
+          <div className="skill-category">
+            <h3>Tools & Technologies</h3>
+            <div className="skill-tags">
+              <span className="skill-tag">MongoDB</span>
+              <span className="skill-tag">Oracle/SQL Server</span>
+              <span className="skill-tag">AWS</span>
+              <span className="skill-tag">Git</span>
+              <span className="skill-tag">Jira</span>
+              <span className="skill-tag">D3.js</span>
+              <span className="skill-tag">Chart.js</span>
+              <span className="skill-tag">MediaPipe</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="experience-highlights">
+          <div className="highlight-card">
+            <h4>Full Stack Development</h4>
+            <p>Built component tracking systems serving 2,000+ aircraft with React.js, Python/Flask, and interactive visualizations</p>
+          </div>
+          <div className="highlight-card">
+            <h4>Data Analysis & ML</h4>
+            <p>Engineered fleet prediction platforms processing 400,000+ monthly records with machine learning trend analysis</p>
+          </div>
+          <div className="highlight-card">
+            <h4>Database Architecture</h4>
+            <p>Designed Oracle database systems with optimized indexing for 2,000+ entities</p>
+          </div>
         </div>
       </section>
 
