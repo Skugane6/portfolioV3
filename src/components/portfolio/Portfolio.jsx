@@ -94,6 +94,43 @@ const Portfolio = ({ onEnterMuseum }) => {
       <button className="museum-button" onClick={onEnterMuseum}>
         Enter Museum
       </button>
+
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <div className="hero-image">
+            <img src="./hero.png" alt="Searan Kuganesan" />
+          </div>
+          <h1>Searan Kuganesan</h1>
+          <h2>Third Year Software Engineering Student</h2>
+          <p className="hero-description">
+            Passionate about creating innovative solutions through code.
+            Specialized in full-stack development, AI integration, and building
+            user-centric applications.
+          </p>
+          <a
+            href="./Searan_Resume.pdf"
+            download="Searan_Kuganesan_Resume.pdf"
+            className="resume-button"
+          >
+            Download Resume
+          </a>
+        </div>
+      </section>
+
+      {/* About Me Section */}
+      <section className="about-section">
+        <h2 className="section-heading">About Me</h2>
+        <div className="qualities-grid">
+          <div className="quality-item">Analytical</div>
+          <div className="quality-item">Innovative</div>
+          <div className="quality-item">Adaptable</div>
+          <div className="quality-item">Detail-oriented</div>
+          <div className="quality-item">Collaborative</div>
+          <div className="quality-item">Problem-solver</div>
+        </div>
+      </section>
+
       <div className="progress">
         <h1>Featured Works</h1>
         <motion.div style={{ scaleX }} className="progressBar"></motion.div>
@@ -101,6 +138,57 @@ const Portfolio = ({ onEnterMuseum }) => {
       {items.map((item) => (
         <Single item={item} key={item.id} />
       ))}
+
+      {/* Contact Section */}
+      <section className="contact-section">
+        <h2 className="section-heading">Get In Touch</h2>
+        <div className="contact-grid">
+          <div className="contact-card">
+            <div className="contact-icon">
+              <img src="./email.png" alt="Email" />
+            </div>
+            <h3>Email</h3>
+            <a href="mailto:searan.kuganesan4@gmail.com">
+              searan.kuganesan4@gmail.com
+            </a>
+          </div>
+          <div className="contact-card">
+            <div className="contact-icon">
+              <img src="./github.png" alt="GitHub" />
+            </div>
+            <h3>GitHub</h3>
+            <a
+              href="https://github.com/Skugane6"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @Skugane6
+            </a>
+          </div>
+          <div className="contact-card">
+            <div className="contact-icon">
+              <img src="./linkedin.png" alt="LinkedIn" />
+            </div>
+            <h3>LinkedIn</h3>
+            <a
+              href="https://linkedin.com/in/searan-kuganesan"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Searan Kuganesan
+            </a>
+          </div>
+          <div className="contact-card">
+            <div className="contact-icon-emoji">📱</div>
+            <h3>Phone</h3>
+            <p>(647) 854-4416</p>
+          </div>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <p>© 2025 Searan Kuganesan. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
