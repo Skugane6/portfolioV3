@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import "./portfolio.scss";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform, useInView } from "framer-motion";
 
 const Portfolio = ({ onEnterMuseum }) => {
   const ref = useRef();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -17,11 +17,15 @@ const Portfolio = ({ onEnterMuseum }) => {
   });
 
   useEffect(() => {
-    // Check for saved dark mode preference
+    // Check for saved dark mode preference, default to dark mode
     const savedMode = localStorage.getItem('darkMode');
-    if (savedMode === 'true') {
+    if (savedMode === 'false') {
+      setIsDarkMode(false);
+      document.body.classList.remove('dark-mode');
+    } else {
       setIsDarkMode(true);
       document.body.classList.add('dark-mode');
+      localStorage.setItem('darkMode', 'true');
     }
   }, []);
 
@@ -76,22 +80,121 @@ const Portfolio = ({ onEnterMuseum }) => {
   },
 ];
 
-  const Single = ({ item }) => {
+  // Animation variants
+  const heroVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.15,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const heroItemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
+  };
+
+  const fadeInUpVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.7,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
+  };
+
+  const skillsContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const skillCardVariants = {
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.34, 1.56, 0.64, 1]
+      }
+    }
+  };
+
+  const contactCardVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.34, 1.56, 0.64, 1]
+      }
+    }
+  };
+
+  const Single = ({ item, index }) => {
     const singleRef = useRef();
+    const isInView = useInView(singleRef, { once: true, margin: "-100px" });
 
     const { scrollYProgress } = useScroll({
       target: singleRef,
+      offset: ["start end", "end start"]
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], [-300, 300]);
+    const y = useTransform(scrollYProgress, [0, 1], [-100, 100]);
+    const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.4, 1, 1, 0.4]);
+    const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.9, 1, 1, 0.9]);
+
+    const projectVariants = {
+      hidden: { opacity: 0, x: index % 2 === 0 ? -50 : 50 },
+      visible: {
+        opacity: 1,
+        x: 0,
+        transition: {
+          duration: 0.8,
+          ease: [0.25, 0.46, 0.45, 0.94]
+        }
+      }
+    };
 
     return (
       <section>
         <div className="container">
-          <div className="wrapper">
-            <div className="imageContainer" ref={singleRef}>
-              <img src={item.img} alt="" />
-            </div>
+          <motion.div
+            className="wrapper"
+            ref={singleRef}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={projectVariants}
+          >
+            <motion.div
+              className="imageContainer"
+              style={{ scale, opacity }}
+            >
+              <img src={item.img} alt={item.title} />
+            </motion.div>
             <motion.div className="textContainer" style={{ y }}>
               <h2>{item.title}</h2>
               <p>{item.desc}</p>
@@ -99,54 +202,43 @@ const Portfolio = ({ onEnterMuseum }) => {
                 <button>View Project</button>
               </a>
             </motion.div>
-          </div>
+          </motion.div>
         </div>
       </section>
     );
   };
 
-  return (
-    <div className="portfolio" ref={ref}>
-      <button className="museum-button" onClick={onEnterMuseum}>
-        Enter Museum
-      </button>
-      <button className="dark-mode-toggle" onClick={toggleDarkMode}>
-        {isDarkMode ? '☀️' : '🌙'}
-      </button>
+  const AboutSection = () => {
+    const sectionRef = useRef();
+    const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-image">
-            <img src="./hero.png" alt="Searan Kuganesan" />
-          </div>
-          <h1>Searan Kuganesan</h1>
-          <h2>Third Year Software Engineering Student</h2>
-          <p className="hero-description">
-            Passionate about creating innovative solutions through code.
-            Specialized in full-stack development, AI integration, and building
-            user-centric applications.
-          </p>
-          <a
-            href="./Searan_Resume.pdf"
-            download="Searan_Kuganesan_Resume.pdf"
-            className="resume-button"
-          >
-            Download Resume
-          </a>
-        </div>
-      </section>
-
-      {/* About Me Section */}
-      <section className="about-section">
-        <h2 className="section-heading">About Me</h2>
-        <p className="about-description">
+    return (
+      <section className="about-section" ref={sectionRef}>
+        <motion.h2
+          className="section-heading"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          About Me
+        </motion.h2>
+        <motion.p
+          className="about-description"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
           4th Year Software Engineering Student at Western University with professional experience as a Full Stack Developer & Data Analyst at Mitsubishi Heavy Industries.
           Passionate about building innovative full-stack applications, implementing machine learning solutions, and creating impactful user experiences.
-        </p>
+        </motion.p>
 
-        <div className="skills-container">
-          <div className="skill-category">
+        <motion.div
+          className="skills-container"
+          variants={skillsContainerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          <motion.div className="skill-category" variants={skillCardVariants}>
             <h3>Languages</h3>
             <div className="skill-tags">
               <span className="skill-tag">Java</span>
@@ -157,9 +249,9 @@ const Portfolio = ({ onEnterMuseum }) => {
               <span className="skill-tag">HTML5</span>
               <span className="skill-tag">CSS3</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="skill-category">
+          <motion.div className="skill-category" variants={skillCardVariants}>
             <h3>Frameworks & Libraries</h3>
             <div className="skill-tags">
               <span className="skill-tag">React</span>
@@ -172,9 +264,9 @@ const Portfolio = ({ onEnterMuseum }) => {
               <span className="skill-tag">NumPy/Pandas</span>
               <span className="skill-tag">scikit-learn</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="skill-category">
+          <motion.div className="skill-category" variants={skillCardVariants}>
             <h3>Tools & Technologies</h3>
             <div className="skill-tags">
               <span className="skill-tag">MongoDB</span>
@@ -186,41 +278,64 @@ const Portfolio = ({ onEnterMuseum }) => {
               <span className="skill-tag">Chart.js</span>
               <span className="skill-tag">MediaPipe</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        <div className="experience-highlights">
-          <div className="highlight-card">
+        <motion.div
+          className="experience-highlights"
+          variants={skillsContainerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          <motion.div className="highlight-card" variants={skillCardVariants}>
+            <div className="card-number">01</div>
             <h4>Full Stack Development</h4>
             <p>Built component tracking systems serving 2,000+ aircraft with React.js, Python/Flask, and interactive visualizations</p>
-          </div>
-          <div className="highlight-card">
+          </motion.div>
+          <motion.div className="highlight-card" variants={skillCardVariants}>
+            <div className="card-number">02</div>
             <h4>Data Analysis & ML</h4>
             <p>Engineered fleet prediction platforms processing 400,000+ monthly records with machine learning trend analysis</p>
-          </div>
-          <div className="highlight-card">
+          </motion.div>
+          <motion.div className="highlight-card" variants={skillCardVariants}>
+            <div className="card-number">03</div>
             <h4>Database Architecture</h4>
             <p>Designed Oracle database systems with optimized indexing for 2,000+ entities</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
+    );
+  };
 
-      <div className="progress">
-        <h1>Featured Works</h1>
-        <motion.div style={{ scaleX }} className="progressBar"></motion.div>
-      </div>
-      {items.map((item) => (
-        <Single item={item} key={item.id} />
-      ))}
+  const ContactSection = () => {
+    const sectionRef = useRef();
+    const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
-      {/* Contact Section */}
-      <section className="contact-section">
-        <h2 className="section-heading">Get In Touch</h2>
-        <p className="section-subheading">
+    return (
+      <section className="contact-section" ref={sectionRef}>
+        <motion.h2
+          className="section-heading"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.6 }}
+        >
+          Get In Touch
+        </motion.h2>
+        <motion.p
+          className="section-subheading"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
           Let's connect! I'm always open to discussing new opportunities, projects, or collaborations.
-        </p>
-        <div className="contact-grid">
-          <div className="contact-card">
+        </motion.p>
+        <motion.div
+          className="contact-grid"
+          variants={skillsContainerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          <motion.div className="contact-card" variants={contactCardVariants}>
             <div className="contact-icon">
               <img src="./email.png" alt="Email" />
             </div>
@@ -228,8 +343,8 @@ const Portfolio = ({ onEnterMuseum }) => {
             <a href="mailto:searan.kuganesan4@gmail.com">
               searan.kuganesan4@gmail.com
             </a>
-          </div>
-          <div className="contact-card">
+          </motion.div>
+          <motion.div className="contact-card" variants={contactCardVariants}>
             <div className="contact-icon">
               <img src="./github.png" alt="GitHub" />
             </div>
@@ -241,8 +356,8 @@ const Portfolio = ({ onEnterMuseum }) => {
             >
               @Skugane6
             </a>
-          </div>
-          <div className="contact-card">
+          </motion.div>
+          <motion.div className="contact-card" variants={contactCardVariants}>
             <div className="contact-icon">
               <img src="./linkedin.png" alt="LinkedIn" />
             </div>
@@ -254,17 +369,121 @@ const Portfolio = ({ onEnterMuseum }) => {
             >
               Searan Kuganesan
             </a>
-          </div>
-          <div className="contact-card">
+          </motion.div>
+          <motion.div className="contact-card" variants={contactCardVariants}>
             <div className="contact-icon-emoji">📱</div>
             <h3>Phone</h3>
             <p>(647) 854-4416</p>
-          </div>
+          </motion.div>
+        </motion.div>
+      </section>
+    );
+  };
+
+  return (
+    <div className="portfolio" ref={ref}>
+      <motion.button
+        className="museum-button"
+        onClick={onEnterMuseum}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        Enter Museum
+      </motion.button>
+      <motion.button
+        className="dark-mode-toggle"
+        onClick={toggleDarkMode}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        whileHover={{ scale: 1.1, rotate: 15 }}
+        whileTap={{ scale: 0.9, rotate: 0 }}
+      >
+        {isDarkMode ? '☀️' : '🌙'}
+      </motion.button>
+
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="geometric-bg">
+          <motion.div
+            className="geo-circle"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+          ></motion.div>
+          <motion.div
+            className="geo-square"
+            initial={{ opacity: 0, rotate: 0, scale: 0.5 }}
+            animate={{ opacity: 1, rotate: 45, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+          ></motion.div>
+          <motion.div
+            className="geo-triangle"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+          ></motion.div>
         </div>
+        <motion.div
+          className="hero-content"
+          variants={heroVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="hero-image" variants={heroItemVariants}>
+            <img src="./hero.png" alt="Searan Kuganesan" />
+          </motion.div>
+          <motion.h1 variants={heroItemVariants}>Searan Kuganesan</motion.h1>
+          <motion.h2 variants={heroItemVariants}>Software Engineering Student</motion.h2>
+          <motion.p className="hero-description" variants={heroItemVariants}>
+            Passionate about creating innovative solutions through code.
+            Specialized in full-stack development, AI integration, and building
+            user-centric applications.
+          </motion.p>
+          <motion.a
+            href="./Searan_Resume.pdf"
+            download="Searan_Kuganesan_Resume.pdf"
+            className="resume-button"
+            variants={heroItemVariants}
+            whileHover={{ scale: 1.05, x: 4, y: 4 }}
+            whileTap={{ scale: 0.95, x: 0, y: 0 }}
+          >
+            Download Resume
+          </motion.a>
+        </motion.div>
       </section>
 
+      <AboutSection />
+
+      <div className="progress">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          Featured Works
+        </motion.h1>
+        <motion.div style={{ scaleX }} className="progressBar"></motion.div>
+      </div>
+      {items.map((item, index) => (
+        <Single item={item} key={item.id} index={index} />
+      ))}
+
+      <ContactSection />
+
       <footer className="footer">
-        <p>© 2025 Searan Kuganesan. All rights reserved.</p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          © 2025 Searan Kuganesan. All rights reserved.
+        </motion.p>
       </footer>
     </div>
   );
